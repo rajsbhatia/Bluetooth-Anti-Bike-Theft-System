@@ -14,7 +14,8 @@ void setup() {
   Wire.begin();
   Wire.beginTransmission(mpuAddr);
   Wire.write(0x6B);
-  //Wire.write(0);
+  unsigned char temp = 0x0;
+  Wire.write(temp);
   Wire.endTransmission(true);
   Serial.begin(9600);
 }
