@@ -14,13 +14,13 @@ void setup() {
   Wire.begin();
   Wire.beginTransmission(mpuAddr);
   Wire.write(0x6B);
-  Wire.write(0);
+  //Wire.write(0);
   Wire.endTransmission(true);
   Serial.begin(9600);
 }
 
 void loop() {
-  Wire.beginTrandmission(mpuAddr);
+  Wire.beginTransmission(mpuAddr);
   Wire.write(0x3B);
   Wire.endTransmission(false);
   Wire.requestFrom(mpuAddr, 14, true);
@@ -29,9 +29,9 @@ void loop() {
   axisY = Wire.read()<<8|Wire.read();
   axisZ = Wire.read()<<8|Wire.read();
 
-  int xAng = map(axisX, minVal, MaxVal, -90, 90);
-  int yAng = map(axisY, minVal, MaxVal, -90, 90);
-  int zAng = map(axisZ, minVal, MaxVal, -90, 90);
+  int xAng = map(axisX, minVal, maxVal, -90, 90);
+  int yAng = map(axisY, minVal, maxVal, -90, 90);
+  int zAng = map(axisZ, minVal, maxVal, -90, 90);
 
   x = RAD_TO_DEG * (atan2(-yAng, -zAng)+PI);
   y = RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
