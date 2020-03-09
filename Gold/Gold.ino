@@ -20,6 +20,7 @@ void setup(void)
 
 	Serial.begin(9600);
 
+  pinMode(16, OUTPUT); // buzzer
   pinMode(18, OUTPUT);
   pinMode(19, OUTPUT);
   pinMode(22, OUTPUT);   
@@ -62,6 +63,8 @@ void setup(void)
 
 		delay(50);
 	}
+  sw.startWait(0x68, SoftWire::writeMode);
+  sw.write(0x6B);
 	Serial.println("Finished");
 
 }
@@ -73,17 +76,15 @@ void loop(void)
   uint8_t pec = 0;
   int crc = 0;
   
-  sw.startWait(0x68, SoftWire::writeMode);
-  sw.write(0x6B);
   delay(500);
-  sw.write(0x3B);
+  sw.write(0x43);
 
   sw.repeatedStart(0x68, SoftWire::readMode);
   for(int i = 0; i < 3; i++){
-    
+    high = low = 0;
   
-    sw.readThenAck(low);
     sw.readThenAck(high);
+    sw.readThenAck(low);
 
     if (i == 0){
       axisX = high<<8|low;
@@ -95,14 +96,16 @@ void loop(void)
       axisZ = high<<8|low;
     }
 
-    int xAng = map(axisX, minVal, maxVal, -90, 90);
-    int yAng = map(axisY, minVal, maxVal, -90, 90);
-    int zAng = map(axisZ, minVal, maxVal, -90, 90);
 
-    x = RAD_TO_DEG * (atan2(-yAng, -zAng)+PI);
-    y = RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
-    z = RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
   }
+  int xAng = map(axisX, minVal, maxVal, -90, 90);
+  int yAng = map(axisY, minVal, maxVal, -90, 90);
+  int zAng = map(axisZ, minVal, maxVal, -90, 90);
+
+  x = RAD_TO_DEG * (atan2(-yAng, -zAng)+PI);
+  y = RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
+  z = RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
+
   sw.readThenNack(pec);
   sw.stop();
 
@@ -116,10 +119,14 @@ void loop(void)
   crc = SoftWire::crc8_update(pec, pec);
 
   Serial.println("***********");
-  Serial.println(x);
-  Serial.println(y);
-  Serial.println(z);
-  delay(1000);
+//  Serial.println(x);
+//  Serial.println(y);
+//  Serial.println(z);
+  Serial.println(axisX);
+  Serial.println(axisY);
+  Serial.println(axisZ);
+  
+  //delay(1000);
 
   if (x<0){
     digitalWrite(18, HIGH);
@@ -127,7 +134,13 @@ void loop(void)
   else if (x>0){
     digitalWrite(19, HIGH);
   }
-  delay(1000);
+  //delay(1000);
   digitalWrite(18, LOW);
   digitalWrite(19, LOW);
+  
+  // buzzer
+  digitalWrite(16, HIGH);
+  //delay(2000);
+  digitalWrite(16, LOW);
+  
 }
