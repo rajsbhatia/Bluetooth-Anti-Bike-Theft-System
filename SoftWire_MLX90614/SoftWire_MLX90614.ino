@@ -17,7 +17,7 @@
  */
 
 
-#ifdef CALUNIUM
+/*#ifdef CALUNIUM
 #include <DisableJTAG.h>
 
 uint8_t sdaPin = 16; // JTAG TDI
@@ -26,40 +26,22 @@ uint8_t powerPin = 18;
 #elif defined(ARDUINO_ARCH_AVR)
 uint8_t sdaPin = A4;
 uint8_t sclPin = A5;
-#else
+#else*/
 // Adjust to suit your non-AVR architecture
 uint8_t sdaPin = 0;
 uint8_t sclPin = 1;
-#endif
+//#endif
 
-const uint8_t cmdAmbient = 6;
+/*const uint8_t cmdAmbient = 6;
 const uint8_t cmdObject1 = 7;
 const uint8_t cmdObject2 = 8;
 const uint8_t cmdFlags = 0xf0;
 const uint8_t cmdSleep = 0xff;
-
+*/
 
 SoftWire i2c(sdaPin, sclPin);
 
 AsyncDelay samplingInterval;
-
-
-float convertToDegC(uint16_t data)
-{
-	// Remove MSB (error bit, ignored for temperatures)
-	return (((data & (uint16_t)0x7FFF)) / 50.0) - 273.15;
-}
-
-
-// Switch from PWM mode (if it was enabled)
-void exitPWM(void)
-{
-	// Make SMBus request to force SMBus output instead of PWM
-	//SoftWire::setSclLow(&i2c);
-	delay(3); // Must be > 1.44ms
-	//SoftWire::setSclHigh(&i2c);
-	delay(2);
-}
 
 
 uint16_t readMLX90614(uint8_t command, uint8_t &crc)
@@ -117,23 +99,14 @@ void setup(void)
 
 #endif
 
-	/*
-	 * Uncomment if needed. Not a good idea if power switched on/off
-	 * since the sensor will be parasitically powered from the SDA and
-	 * SCL control lines.
-	 */
-	//i2c.enablePullups();
-
 	i2c.setDelay_us(5);
 	i2c.begin();
 	delay(300); // Data is available 0.25s after wakeup
-	exitPWM();
 }
 
 
 void loop(void)
 {
-#ifdef CALUNIUM
 	digitalWrite(powerPin, HIGH);
 	delay(300); // Data available after 0.25s
 	exitPWM();
@@ -150,17 +123,7 @@ void loop(void)
 	
   Serial.println(rawAmbient);
 
-	/*Serial.print("    Object 1: ");
-	if (crcObject1)
-		Serial.print("bus error");
-	else if (rawObject1 & 0x8000)
-		Serial.print("read error");
-	else
-		Serial.print(convertToDegC(rawObject1));*/
-
 	Serial.println();
-#ifdef CALUNIUM
 	digitalWrite(powerPin, LOW);
-#endif
 	delay(1000);
 }

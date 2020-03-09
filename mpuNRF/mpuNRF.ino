@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <SoftWire.h>
 
 const int mpuAddr = 0x68;
 int16_t axisX, axisY, axisZ;
@@ -6,9 +7,19 @@ int16_t axisX, axisY, axisZ;
 int minVal = 265;
 int maxVal = 402;
 
+uint8_t sdaPin = 0;
+uint8_t sclPin = 1;
+
+SoftWire i2c(sdaPin, sclPin);
+
 double x;
 double y;
 double z;
+
+void readMPU()
+{
+  
+}
 
 void setup() {
   Wire.begin();
