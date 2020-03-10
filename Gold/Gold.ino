@@ -21,9 +21,9 @@ void setup(void)
 	Serial.begin(9600);
 
   pinMode(16, OUTPUT); // buzzer
-  pinMode(18, OUTPUT);
-  pinMode(19, OUTPUT);
-  pinMode(22, OUTPUT);   
+  pinMode(18, OUTPUT); // LED 0
+  pinMode(19, OUTPUT); // LED 1
+  pinMode(22, OUTPUT); // LED 4
 
 	//sw.setTimeout_ms(40);
   sw.setDelay_us(5);
@@ -81,7 +81,8 @@ void loop(void)
 
   sw.repeatedStart(0x68, SoftWire::readMode);
   for(int i = 0; i < 3; i++){
-    high = low = 0;
+    high = 0;
+    low = 0;
   
     sw.readThenAck(high);
     sw.readThenAck(low);
