@@ -1,5 +1,14 @@
 #include <Wire.h>
-#include <SoftWire.h>
+#include <SPI.h>
+#include <BLEPeripheral.h>
+
+// define pins (varies per shield/board)
+#define BLE_REQ   10
+#define BLE_RDY   2
+#define BLE_RST   9
+
+// LED pin
+#define LED_PIN   22
 
 const int mpuAddr = 0x68;
 int16_t axisX, axisY, axisZ;
@@ -16,18 +25,16 @@ double currX;
 double currY;
 double currZ;
 
-void setup() {
-  Wire.begin();
-  Wire.beginTransmission(mpuAddr);
-  Wire.write(0x6B);
-  unsigned char temp = 0x0;
-  Wire.write(temp);
-  Wire.endTransmission(true);
-  Serial.begin(9600);
-  pinMode(buzzPin, OUTPUT);
-}
+// create peripheral instance, see pinouts above
+BLEPeripheral            blePeripheral        = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 
-void loop() {
+// create service
+BLEService               ledService           = BLEService("19b10000e8f2537e4f6cd104768a1214");
+
+// create switch characteristic
+BLECharCharacteristic    switchCharacteristic = BLECharCharacteristic("19b10001e8f2537e4f6cd104768a1214", BLERead | BLEWrite);
+
+void readMPU6050(){
   Wire.beginTransmission(mpuAddr);
   Wire.write(0x43);
   Wire.endTransmission(false);
@@ -85,4 +92,62 @@ void loop() {
   currX = x;
   currY = y;
   currZ = z;
+}
+
+void setup() {
+  Wire.begin();
+  
+  Wire.beginTransmission(mpuAddr);
+  Wire.write(0x6B);
+  unsigned char temp = 0x0;
+  Wire.write(temp);
+  Wire.endTransmission(true);
+  
+  Serial.begin(9600);
+  
+  pinMode(buzzPin, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+    // set advertised local name and service UUID
+  blePeripheral.setLocalName("LED");
+  blePeripheral.setAdvertisedServiceUuid(ledService.uuid());
+
+  // add service and characteristic
+  blePeripheral.addAttribute(ledService);
+  blePeripheral.addAttribute(switchCharacteristic);
+
+  // begin initialization
+  blePeripheral.begin();
+
+  Serial.println(F("BLE LED Peripheral"));
+}
+
+void loop() {
+  BLECentral central = blePeripheral.central();
+
+  if (central) {
+    // central connected to peripheral
+    Serial.print(F("Connected to central: "));
+    Serial.println(central.address());
+
+    while (central.connected()) {
+      // central still connected to peripheral
+      if (switchCharacteristic.written()) {
+        // central wrote new value to characteristic, update LED
+        if (switchCharacteristic.value()) {
+          Serial.println(F("LED on"));
+          digitalWrite(LED_PIN, HIGH);
+          readMPU6050();
+        } else {
+          Serial.println(F("LED off"));
+          digitalWrite(LED_PIN, LOW);
+        }
+      }
+    }
+
+    // central disconnected
+    Serial.print(F("Disconnected from central: "));
+    Serial.println(central.address());
+  }
+
 }
