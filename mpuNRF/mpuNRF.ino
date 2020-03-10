@@ -29,7 +29,7 @@ void setup() {
 
 void loop() {
   Wire.beginTransmission(mpuAddr);
-  Wire.write(0x3B);
+  Wire.write(0x43);
   Wire.endTransmission(false);
   Wire.requestFrom(mpuAddr, 14, true);
   
@@ -64,7 +64,7 @@ void loop() {
       tempDiff = currZ - z;
     }
     
-    if ((tempDiff >= 100) || (tempDiff <= -100)){
+    if ((tempDiff >= 350) || (tempDiff <= -350)){
       digitalWrite(buzzPin, HIGH);
       check = false;
       Serial.println("******start*****");
@@ -82,4 +82,7 @@ void loop() {
   if (check){
     digitalWrite(buzzPin, LOW);
   }
+  currX = x;
+  currY = y;
+  currZ = z;
 }
