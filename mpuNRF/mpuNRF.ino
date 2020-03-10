@@ -25,6 +25,8 @@ double currX;
 double currY;
 double currZ;
 
+bool armed = false;
+
 // create peripheral instance, see pinouts above
 BLEPeripheral            blePeripheral        = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 
@@ -33,6 +35,12 @@ BLEService               ledService           = BLEService("19b10000e8f2537e4f6c
 
 // create switch characteristic
 BLECharCharacteristic    switchCharacteristic = BLECharCharacteristic("19b10001e8f2537e4f6cd104768a1214", BLERead | BLEWrite);
+
+bool isArmed(){
+  if (armed){
+    readMPU6050();
+  }
+}
 
 void readMPU6050(){
   Wire.beginTransmission(mpuAddr);
@@ -124,7 +132,7 @@ void setup() {
 
 void loop() {
   BLECentral central = blePeripheral.central();
-
+  
   if (central) {
     // central connected to peripheral
     Serial.print(F("Connected to central: "));
@@ -137,17 +145,21 @@ void loop() {
         if (switchCharacteristic.value()) {
           Serial.println(F("LED on"));
           digitalWrite(LED_PIN, HIGH);
-          readMPU6050();
+          armed = true;
         } else {
           Serial.println(F("LED off"));
           digitalWrite(LED_PIN, LOW);
+          armed = false;
         }
       }
+      isArmed();
     }
 
     // central disconnected
     Serial.print(F("Disconnected from central: "));
     Serial.println(central.address());
   }
+
+  isArmed();
 
 }
