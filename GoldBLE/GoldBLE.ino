@@ -9,17 +9,12 @@ const int ledPin = LED_BUILTIN; // pin to use for the LED
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial);
 
   // set LED pin to output mode
   pinMode(ledPin, OUTPUT);
 
   // begin initialization
-  if (!BLE.begin()) {
-    Serial.println("starting BLE failed!");
-
-    while (1);
-  }
+  BLE.begin();
 
   // set advertised local name and service UUID:
   BLE.setLocalName("LED");
