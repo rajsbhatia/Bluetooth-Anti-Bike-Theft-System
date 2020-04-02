@@ -81,6 +81,7 @@ void readGyro() {
     
     if ((tempDiff >= 15) || (tempDiff <= -15)){
       digitalWrite(buzzPin, HIGH);
+      delay(30);
       check = false;
       Serial.println("******start*****");
       Serial.println(x);
