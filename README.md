@@ -2,4 +2,8 @@
 
 ## iOS application
 
-To see iOS application GitHub repository, click [here](https://github.com/jtlemkin/ios-bike-alarm)
+To see the iOS application GitHub repository, click [here](https://github.com/jtlemkin/ios-bike-alarm)
+
+## Android application
+
+To see the Android application GitHub repository, click [here](https://github.com/jtlemkin/BikeBuddy)
