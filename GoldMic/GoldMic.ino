@@ -19,7 +19,6 @@ volatile int samplesRead;
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial);
 
   // configure the data receive callback
   PDM.onReceive(onPDMdata);
@@ -42,7 +41,9 @@ void loop() {
 
     // print samples to the serial monitor or plotter
     for (int i = 0; i < samplesRead; i++) {
-      Serial.println(sampleBuffer[i]);
+      if (sampleBuffer[i] >= 100 || sampleBuffer[i] <= -100) {
+        Serial.println(sampleBuffer[i]);
+      }
     }
 
     // clear the read count

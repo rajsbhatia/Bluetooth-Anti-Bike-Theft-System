@@ -16,19 +16,17 @@ const double batteryConversion = 3600000; // conversion from ms to hours
 // gryoscope values
 float x, y, z;
 float prevX, prevY, prevZ;
-int xPeaks[5] = {MAX, MAX, MAX, MAX, MAX};
-int yPeaks[5] = {MAX, MAX, MAX, MAX, MAX};
-int zPeaks[5] = {MAX, MAX, MAX, MAX, MAX};
+float delta = 400.0;
+int Peaks[5] = {MAX, MAX, MAX, MAX, MAX};
 
 bool armed = false;
-bool order = false;
+
 int counter = 0;
 int endP = 0;
 
 void setPins() {
   // set LED pin to output mode
   pinMode(ledPin, OUTPUT);
-  //pinMode(buzzPin, OUTPUT);
 }
 
 void setBLE() {
@@ -58,54 +56,58 @@ void setBLE() {
 
 void setGyro() {
   IMU.begin();
-  
-  Serial.print("Gyroscope sample rate = ");
-  Serial.print(IMU.gyroscopeSampleRate());
-  Serial.println(" Hz");
-  Serial.println();
-  Serial.println("Gyroscope in degrees/second");
-  Serial.println("X\tY\tZ");
 }
 
 void setPassword() {
   int startTime = millis();
-  int x2 = 0;
-  int y2 = 0;
-  int z2 = 0;
-  int tempX = 0;
-  int tempY = 0;
-  int tempZ = 0;
+  int prev = -1;
+  while (millis() - startTime < 10000) {
+    if (IMU.gyroscopeAvailable())
+    {
+      IMU.readGyroscope(x, y, z);
   
-  while (millis() - startTime < 11000) {
-    IMU.readGyroscope(x, y, z);
+      if((y < -delta) && (prev != 0)) {
+        Serial.println("Flicked down");
+        Peaks[endP] = 0;
+        prev = 0;
+        endP++;
+      }
+      else if((y > delta) && (prev != 1)) {
+        Serial.println("Flicked up");
+        Peaks[endP] = 1;
+        prev = 1;
+        endP++;
+      }
+      else if((x < -delta) && (prev != 2)) {
+        Serial.println("Rotated left");
+        Peaks[endP] = 2;
+        prev = 2;
+        endP++;
+      }
+      else if((x > delta) && (prev != 3)) {
+        Serial.println("Rotated right");
+        Peaks[endP] = 3;
+        prev = 3;
+        endP++;
+      }
+      else if((z < -delta) && (prev != 4)) {
+        Serial.println("Flicked right");
+        Peaks[endP] = 4;
+        prev = 4;
+        endP++;
+      }
+      else if((z > delta) && (prev != 5)) {
+        Serial.println("Flicked left");
+        Peaks[endP] = 5;
+        prev = 5;
+        endP++;
+      }
 
-    tempX = x - x2;
-    tempY = y - y2;
-    tempZ = z - z2;
-   
-    if ((tempX >= 80) || (tempX <= -80) || (tempY >= 80) || (tempY <= -80) || (tempZ >= 80) || (tempZ <= -80)){
-      xPeaks[counter] = tempX;
-      yPeaks[counter] = tempY;
-      zPeaks[counter] = tempZ;
-
-      /*Serial.println("Peak");
-      Serial.println(counter);
-      Serial.println(tempX);
-      Serial.println(tempY);
-      Serial.println(tempZ);*/
-      
-      counter++;
-      endP = counter;
-      if (counter > 4) {
+      if (endP == 5) {
         break;
       }
     }
-    
-    x2 = x;
-    y2 = y;
-    z2 = z;
   }
-  counter = 0;
 }
 
 int BatteryLife() {
@@ -127,81 +129,79 @@ int BatteryLife() {
 void readGyro() {
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
-
-    /*Serial.print(x);
-    Serial.print('\t');
-    Serial.print(y);
-    Serial.print('\t');
-    Serial.println(z);*/
-  }
   
-  bool check = true;
-  int tempDiff = 0;
-  int tempX = 0;
-  int tempY = 0;
-  int tempZ = 0;
-  for (int i = 0; i < 3; i++){
-    if (i == 0){
-      tempDiff = prevX - x;
-      tempX = prevX - x;
-    }
-    else if (i == 1){
-      tempDiff = prevY - y;
-      tempY = prevY - y;
-    }
-    else if (i == 2){
-      tempDiff = prevZ - z;
-      tempZ = prevZ - z;
+    bool check = true;
+    int tempDiff = 0;
+    for (int i = 0; i < 3; i++) {
+      if (i == 0){
+        tempDiff = prevX - x;
+      }
+      else if (i == 1){
+        tempDiff = prevY - y;
+      }
+      else if (i == 2){
+        tempDiff = prevZ - z;
+      }
+      
+      if ((tempDiff >= 15) || (tempDiff <= -15)) {
+        digitalWrite(buzzPin, HIGH);
+        delay(30);
+        check = false;
+      }
     }
     
-    if ((tempDiff >= 15) || (tempDiff <= -15)) {
-      digitalWrite(buzzPin, HIGH);
-      delay(30);
-      check = false;
-      /*Serial.println("******start*****");
-      Serial.println(x);
-      Serial.println(y);
-      Serial.println(z);
-      Serial.println("******middle*****");
-      Serial.println(prevX);
-      Serial.println(prevY);
-      Serial.println(prevZ);
-      Serial.println("******end*****");*/
+    if (check) {
+      digitalWrite(buzzPin, LOW);
     }
-  }
-  
-  if (check) {
-    digitalWrite(buzzPin, LOW);
-  }
-  prevX = x;
-  prevY = y;
-  prevZ = z;
+    
+    prevX = x;
+    prevY = y;
+    prevZ = z;
 
-  if ((tempX >= 80) || (tempX <= -80) || (tempY >= 80) || (tempY <= -80) || (tempZ >= 80) || (tempZ <= -80)) {
-    /*Serial.println("Start");
-    Serial.println(tempX - xPeaks[counter]);
-    Serial.println(tempY - yPeaks[counter]);
-    Serial.println(tempZ - zPeaks[counter]);
-    Serial.println(counter);
-    Serial.println("Finish");*/
-    if ((((tempX - xPeaks[counter]) >= 15) || ((tempX - xPeaks[counter]) <= -15)) || (((tempY - yPeaks[counter]) >= 15) || ((tempY - yPeaks[counter]) <= -15)) || (((tempZ - zPeaks[counter]) >= 15) || ((tempZ - zPeaks[counter]) <= -15))) {
-      order = true;
+    int currMov = -1;
+    if(y < -delta) {
+      Serial.println("Flicked down");
+      currMov = 0;
+    }
+    else if(y > delta) {
+      Serial.println("Flicked up");
+      currMov = 1;
+    }
+    else if(x < -delta) {
+      Serial.println("Rotated left");
+      currMov = 2;
+    }
+    else if(x > delta) {
+      Serial.println("Rotated right");
+      currMov = 3;
+    }
+    else if(z < -delta) {
+      Serial.println("Flicked right");
+      currMov = 4;
+    }
+    else if(z > delta) {
+      Serial.println("Flicked left");
+      currMov = 5;
+    }
+
+    if (currMov == Peaks[counter]) {
       counter++;
-        
-      if (counter < endP) {
-        counter = 0;
-        order = false;
-        digitalWrite(buzzPin, LOW);
-      }
+    }
+    else if ((counter > 0) && (currMov != Peaks[counter - 1])) {
+      counter = 0;
+    }
+      
+    if (counter == endP) {
+      counter = 0;
+      digitalWrite(buzzPin, LOW);
+      digitalWrite(ledPin, LOW);
+      armed = false;
     }
   }
 }
 
 bool isArmed() {
   if(armed) {
-    if (!order) {
-      counter = 0;
-    }
     readGyro();
   }
 }
