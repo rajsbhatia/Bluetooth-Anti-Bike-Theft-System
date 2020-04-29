@@ -108,6 +108,59 @@ void setPassword() {
       }
     }
   }
+
+  for (int i = 0; i < 5; i++) {
+    Serial.println(Peaks[i]);
+  }
+  
+}
+
+void checkPassword() {
+  int startTime = millis();
+  int currMov = -1;
+  float tempX, tempY, tempZ;
+  
+  while ((millis() - startTime) < 10000) {
+    IMU.readGyroscope(tempX, tempY, tempZ);
+    
+    if(tempY < -delta) {
+      Serial.println("Flicked down");
+      currMov = 0;
+    }
+    else if(tempY > delta) {
+      Serial.println("Flicked up");
+      currMov = 1;
+    }
+    else if(tempX < -delta) {
+      Serial.println("Rotated left");
+      currMov = 2;
+    }
+    else if(tempX > delta) {
+      Serial.println("Rotated right");
+      currMov = 3;
+    }
+    else if(tempZ < -delta) {
+      Serial.println("Flicked right");
+      currMov = 4;
+    }
+    else if(tempZ > delta) {
+      Serial.println("Flicked left");
+      currMov = 5;
+    }
+    
+    if (currMov == Peaks[counter]) {
+      counter++;
+    }
+    
+    Serial.println(counter);
+    
+    if (counter == endP) {
+      counter = 0;
+      digitalWrite(buzzPin, LOW);
+      digitalWrite(ledPin, LOW);
+      armed = false;
+    }
+  }
 }
 
 int BatteryLife() {
@@ -158,45 +211,8 @@ void readGyro() {
     prevY = y;
     prevZ = z;
 
-    int currMov = -1;
-    if(y < -delta) {
-      Serial.println("Flicked down");
-      currMov = 0;
-    }
-    else if(y > delta) {
-      Serial.println("Flicked up");
-      currMov = 1;
-    }
-    else if(x < -delta) {
-      Serial.println("Rotated left");
-      currMov = 2;
-    }
-    else if(x > delta) {
-      Serial.println("Rotated right");
-      currMov = 3;
-    }
-    else if(z < -delta) {
-      Serial.println("Flicked right");
-      currMov = 4;
-    }
-    else if(z > delta) {
-      Serial.println("Flicked left");
-      currMov = 5;
-    }
-
-    if (currMov == Peaks[counter]) {
-      counter++;
-    }
-    else if ((counter > 0) && (currMov != Peaks[counter - 1])) {
-      counter = 0;
-    }
-      
-    if (counter == endP) {
-      counter = 0;
-      digitalWrite(buzzPin, LOW);
-      digitalWrite(ledPin, LOW);
-      armed = false;
-    }
+    checkPassword();
+    
   }
 }
 
