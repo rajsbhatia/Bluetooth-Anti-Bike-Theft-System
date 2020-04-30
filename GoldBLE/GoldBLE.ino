@@ -20,6 +20,7 @@ float delta = 400.0;
 int Peaks[5] = {MAX, MAX, MAX, MAX, MAX};
 
 bool armed = false;
+bool password = false;
 
 int counter = 0;
 int endP = 0;
@@ -102,7 +103,7 @@ void setPassword() {
         prev = 5;
         endP++;
       }
-
+      
       if (endP == 5) {
         break;
       }
@@ -147,6 +148,9 @@ void checkPassword() {
       Serial.println("Flicked left");
       currMov = 5;
     }
+    else if (currMov == -1) {
+      break;
+    }
     
     if (currMov == Peaks[counter]) {
       counter++;
@@ -155,12 +159,15 @@ void checkPassword() {
     Serial.println(counter);
     
     if (counter == endP) {
-      counter = 0;
       digitalWrite(buzzPin, LOW);
       digitalWrite(ledPin, LOW);
       armed = false;
+      password = false;
+      break;
     }
   }
+  
+  counter = 0;
 }
 
 int BatteryLife() {
@@ -211,7 +218,9 @@ void readGyro() {
     prevY = y;
     prevZ = z;
 
-    checkPassword();
+    if (password) {
+      checkPassword();
+    }
     
   }
 }
@@ -252,9 +261,13 @@ void loop() {
           Serial.println("LED on");
           digitalWrite(ledPin, HIGH);         // will turn the LED on
           armed = true;
+          if (Peaks[0] != MAX) {
+            password = true; 
+          }
         } else if (switchCharacteristic.value() == 2) {
           Serial.println("Setting user password");
           setPassword();
+          password = true;
           Serial.println("Done");
         } else if (switchCharacteristic.value() == 0){                              // a 0 value
           Serial.println(F("LED off"));
