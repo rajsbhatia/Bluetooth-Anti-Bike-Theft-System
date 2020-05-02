@@ -170,6 +170,13 @@ void checkPassword() {
   counter = 0;
 }
 
+void resetPassword() {
+  for(int i = 0; i < 5; i++) {
+    Peaks[i] = MAX;
+  }
+  endP = 0;
+}
+
 int BatteryLife() {
   double currentTime = millis();
   double totalHours = currentTime / batteryConversion;
@@ -266,6 +273,7 @@ void loop() {
           }
         } else if (switchCharacteristic.value() == 2) {
           Serial.println("Setting user password");
+          resetPassword();
           setPassword();
           password = true;
           Serial.println("Done");
