@@ -211,7 +211,7 @@ void readGyro() {
         tempDiff = prevZ - z;
       }
       
-      if ((tempDiff >= 15) || (tempDiff <= -15)) {
+      if ((tempDiff >= 3) || (tempDiff <= -3)) {
         digitalWrite(buzzPin, HIGH);
         delay(30);
         check = false;
@@ -260,6 +260,7 @@ void loop() {
     // while the central is still connected to peripheral:
     while (central.connected()) {
       batteryCharacteristic.writeValue(BatteryLife());
+      //batteryCharacteristic.writeValue(21);
 
       if (mandoLock == 0) {
         //Serial.println(F("LED off"));
